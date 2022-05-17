@@ -72,6 +72,6 @@ ax.set_title("WeightedMinHash accuracy")
 ax.grid()
 
 fig.savefig(output, bbox_inches="tight")
-logging.info("Plot saved to %s" % output)
+logging.info(f"Plot saved to {output}")
 
 

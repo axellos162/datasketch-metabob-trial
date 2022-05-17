@@ -111,8 +111,7 @@ class Storage(ABC):
         return self.size()
 
     def __iter__(self):
-        for key in self.keys():
-            yield key
+        yield from self.keys()
 
     def __contains__(self, item):
         return self.has_key(item)
@@ -420,10 +419,8 @@ if cassandra is not None:
             :return: a generator
             """
             iterator = iter(iterable)
-            item = list(itertools.islice(iterator, size))
-            while item:
+            while item := list(itertools.islice(iterator, size)):
                 yield item
-                item = list(itertools.islice(iterator, size))
 
         def _select(self, statements_and_parameters):
             """
@@ -443,11 +440,9 @@ if cassandra is not None:
                 )
                 for result in results:
                     success, rows = result
-                    if success:
-                        for row in rows:
-                            ret.append(row)
-                    else:
+                    if not success:
                         raise RuntimeError
+                    ret.extend(iter(rows))
             return ret
 
         def _execute(self, statements_and_parameters):
@@ -623,8 +618,9 @@ if cassandra is not None:
             :rtype: byte|str|None
             :return: a single value for that key or None if the key does not exist
             """
-            rows = self._session.execute(self._stmt_get_one, (self._key_encoder(key),))
-            if rows:
+            if rows := self._session.execute(
+                self._stmt_get_one, (self._key_encoder(key),)
+            ):
                 row = next(iter(rows))
                 return self._val_decoder(row.value)
             return None
@@ -668,7 +664,7 @@ if cassandra is not None:
             if buffer_size is None:
                 buffer_size = CassandraStorage.DEFAULT_BUFFER_SIZE
             cassandra_param = self._parse_config(self._config['cassandra'])
-            self._name = name if name else _random_name(11).decode('utf-8')
+            self._name = name or _random_name(11).decode('utf-8')
             self._buffer_size = buffer_size
             self._client = CassandraClient(cassandra_param, name, self._buffer_size)
 
@@ -683,9 +679,8 @@ if cassandra is not None:
             """
             cfg = {}
             for key, value in config.items():
-                if isinstance(value, dict):
-                    if 'env' in value:
-                        value = os.getenv(value['env'], value.get('default', None))
+                if isinstance(value, dict) and 'env' in value:
+                    value = os.getenv(value['env'], value.get('default', None))
                 cfg[key] = value
             return cfg
 
@@ -893,9 +888,8 @@ if redis is not None:
                 # 'default'.
                 # (This is useful if the database relocates to a different host
                 # during the lifetime of the LSH object)
-                if isinstance(value, dict):
-                    if 'env' in value:
-                        value = os.getenv(value['env'], value.get('default', None))
+                if isinstance(value, dict) and 'env' in value:
+                    value = os.getenv(value['env'], value.get('default', None))
                 cfg[key] = value
             return cfg
 
@@ -953,12 +947,7 @@ if redis is not None:
                 self._redis.hdel(self._name, redis_key)
 
         def insert(self, key, *vals, **kwargs):
-            # Using buffer=True outside of an `insertion_session`
-            # could lead to inconsistencies, because those
-            # insertion will not be processed until the
-            # buffer is cleared
-            buffer = kwargs.pop('buffer', False)
-            if buffer:
+            if buffer := kwargs.pop('buffer', False):
                 self._insert(self._buffer, key, *vals)
             else:
                 self._insert(self._redis, key, *vals)
@@ -977,8 +966,7 @@ if redis is not None:
             ks = self.keys()
             for k in ks:
                 self._get_len(pipe, self.redis_key(k))
-            d = dict(zip(ks, pipe.execute()))
-            return d
+            return dict(zip(ks, pipe.execute()))
 
         @staticmethod
         def _get_len(r, k):

@@ -38,10 +38,12 @@ class WeightedMinHash(object):
             raise ValueError("Cannot compute Jaccard given WeightedMinHash objects with\
                     different numbers of hash values")
         # Check how many pairs of (k, t) hashvalues are equal
-        intersection = 0
-        for this, that in zip(self.hashvalues, other.hashvalues):
-            if np.array_equal(this, that):
-                intersection += 1
+        intersection = sum(
+            1
+            for this, that in zip(self.hashvalues, other.hashvalues)
+            if np.array_equal(this, that)
+        )
+
         return float(intersection) / len(self)
  
     def digest(self):
@@ -115,7 +117,7 @@ class WeightedMinHashGenerator(object):
         '''
         if not isinstance(v, collections.Iterable):
             raise TypeError("Input vector must be an iterable")
-        if not len(v) == self.dim:
+        if len(v) != self.dim:
             raise ValueError("Input dimension mismatch, expecting %d" % self.dim)
         if not isinstance(v, np.ndarray):
             v = np.array(v)

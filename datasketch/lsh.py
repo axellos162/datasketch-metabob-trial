@@ -95,7 +95,7 @@ class MinHashLSH(object):
 
     def __init__(self, threshold=0.9, num_perm=128, weights=(0.5, 0.5),
                  params=None, storage_config=None, prepickle=None):
-        storage_config = {'type': 'dict'} if not storage_config else storage_config
+        storage_config = storage_config or {'type': 'dict'}
         self._buffer_size = 50000
         if threshold > 1.0 or threshold < 0.0:
             raise ValueError("threshold must be in [0.0, 1.0]")
@@ -109,10 +109,10 @@ class MinHashLSH(object):
         if params is not None:
             self.b, self.r = params
             if self.b * self.r > num_perm:
-                raise ValueError("The product of b and r in params is "
-                        "{} * {} = {} -- it must be less than num_perm {}. "
-                        "Did you forget to specify num_perm?".format(
-                            self.b, self.r, self.b*self.r, num_perm))
+                raise ValueError(
+                    f"The product of b and r in params is {self.b} * {self.r} = {self.b * self.r} -- it must be less than num_perm {num_perm}. Did you forget to specify num_perm?"
+                )
+
         else:
             false_positive_weight, false_negative_weight = weights
             self.b, self.r = _optimal_param(threshold, num_perm,
@@ -266,8 +266,7 @@ class MinHashLSH(object):
         Returns a list of length ``self.b`` with elements representing the
         number of keys stored under each bucket for the given permutation.
         '''
-        counts = [len(hashtable) for hashtable in self.hashtables]
-        return counts
+        return [len(hashtable) for hashtable in self.hashtables]
 
     def get_subset_counts(self, *keys):
         '''
