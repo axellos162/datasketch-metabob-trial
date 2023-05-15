@@ -59,7 +59,7 @@ if __name__ == "__main__":
     (query_sets, query_keys) = read_sets_from_file(args.index_set_file, 
             sample_ratio=args.query_sample_ratio, 
             skip=1)
-    
+
     # Initialize output SQLite database.
     init_results_db(args.output)
 
@@ -108,11 +108,23 @@ if __name__ == "__main__":
             print(f"Running LSH using b = {b}, r = {r}.")
             # Lazily create MinHashes.
             if b*r not in index_minhashes:
-                index_minhashes.update(create_minhashes_from_sets(
-                        index_sets, [b*r,], hashfunc=farmhash.hash32))
+                index_minhashes |= create_minhashes_from_sets(
+                    index_sets,
+                    [
+                        b * r,
+                    ],
+                    hashfunc=farmhash.hash32,
+                )
+
             if b*r not in query_minhashes:
-                query_minhashes.update(create_minhashes_from_sets(
-                        query_sets, [b*r,], hashfunc=farmhash.hash32))
+                query_minhashes |= create_minhashes_from_sets(
+                    query_sets,
+                    [
+                        b * r,
+                    ],
+                    hashfunc=farmhash.hash32,
+                )
+
             # Run benchmark.
             results, times = search_lsh_jaccard_topk(
                     (index_sets, index_keys, index_minhashes),
@@ -120,7 +132,7 @@ if __name__ == "__main__":
                     b, r, k)
             # Save result to SQLite database.
             save_results("lsh", k, None, params, results, times, args.output)
-    
+
     # Run LSH Forest.
     for b in bs:
         for r in rs:
@@ -133,11 +145,23 @@ if __name__ == "__main__":
             print(f"Running LSH Forest using b = {b}, r = {r}.")
             # Lazily create MinHashes.
             if b*r not in index_minhashes:
-                index_minhashes.update(create_minhashes_from_sets(
-                        index_sets, [b*r,], hashfunc=farmhash.hash32))
+                index_minhashes |= create_minhashes_from_sets(
+                    index_sets,
+                    [
+                        b * r,
+                    ],
+                    hashfunc=farmhash.hash32,
+                )
+
             if b*r not in query_minhashes:
-                query_minhashes.update(create_minhashes_from_sets(
-                        query_sets, [b*r,], hashfunc=farmhash.hash32))
+                query_minhashes |= create_minhashes_from_sets(
+                    query_sets,
+                    [
+                        b * r,
+                    ],
+                    hashfunc=farmhash.hash32,
+                )
+
             # Run benchmark.
             results, times = search_lshforest_jaccard_topk(
                     (index_sets, index_keys, index_minhashes),

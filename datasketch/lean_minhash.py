@@ -109,11 +109,11 @@ class LeanMinHash(MinHash):
             int: Size in number of bytes after serialization.
         '''
         # Use 8 bytes to store the seed integer
-        seed_size = struct.calcsize(byteorder+'q')
+        seed_size = struct.calcsize(f'{byteorder}q')
         # Use 4 bytes to store the number of hash values
-        length_size = struct.calcsize(byteorder+'i')
+        length_size = struct.calcsize(f'{byteorder}i')
         # Use 4 bytes to store each hash value as we are using the lower 32 bit
-        hashvalue_size = struct.calcsize(byteorder+'I')
+        hashvalue_size = struct.calcsize(f'{byteorder}I')
         return seed_size + length_size + len(self) * hashvalue_size
 
     def serialize(self, buf, byteorder='@'):
@@ -190,8 +190,8 @@ class LeanMinHash(MinHash):
 
                 lean_minhash = LeanMinHash.deserialize(buf)
         '''
-        fmt_seed_size = "%sqi" % byteorder
-        fmt_hash = byteorder + "%dI"
+        fmt_seed_size = f"{byteorder}qi"
+        fmt_hash = f"{byteorder}%dI"
         try:
             seed, num_perm = struct.unpack_from(fmt_seed_size, buf, 0)
         except TypeError:

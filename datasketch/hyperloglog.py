@@ -182,9 +182,7 @@ class HyperLogLog(object):
             bool: True if the current HyperLogLog is empty - at the state of just
             initialized.
         '''
-        if any(self.reg):
-            return False
-        return True
+        return not any(self.reg)
 
     def clear(self):
         '''
@@ -234,7 +232,7 @@ class HyperLogLog(object):
             raise ValueError("Cannot union less than 2 HyperLogLog\
                     sketches")
         m = hyperloglogs[0].m
-        if not all(h.m == m for h in hyperloglogs):
+        if any(h.m != m for h in hyperloglogs):
             raise ValueError("Cannot union HyperLogLog sketches with\
                     different precisions")
         reg = np.maximum.reduce([h.reg for h in hyperloglogs])
@@ -345,7 +343,4 @@ class HyperLogLogPlusPlus(HyperLogLog):
                 return lc
         # Use HyperLogLog estimation function
         e = self.alpha * float(self.m ** 2) / np.sum(2.0**(-self.reg))
-        if e <= 5 * self.m:
-            return e - self._estimate_bias(e, self.p)
-        else:
-            return e
+        return e - self._estimate_bias(e, self.p) if e <= 5 * self.m else e

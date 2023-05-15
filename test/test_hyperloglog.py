@@ -15,7 +15,7 @@ class TestHyperLogLog(unittest.TestCase):
         h = self._class(4, hashfunc=fake_hash_func)
         self.assertEqual(h.m, 1 << 4)
         self.assertEqual(len(h.reg), h.m)
-        self.assertTrue(all(0 == i for i in h.reg))
+        self.assertTrue(all(i == 0 for i in h.reg))
 
     def test_init_from_reg(self):
         reg = np.array([1 for _ in range(1 << 4)], dtype=np.int8)
@@ -122,7 +122,7 @@ class TestHyperLogLog(unittest.TestCase):
 class TestHyperLogLogSpecific(unittest.TestCase):
 
     def test_hyperloglog_large_card_est(self):
-        reg = np.array([27 for i in range(1 << 4)], dtype=np.int8)
+        reg = np.array([27 for _ in range(1 << 4)], dtype=np.int8)
         with patch.object(HyperLogLog, '_largerange_correction') as mock_method:
             mock_method.return_value = 0
             h = HyperLogLog(reg=reg)
@@ -130,7 +130,7 @@ class TestHyperLogLogSpecific(unittest.TestCase):
         self.assertTrue(mock_method.called)
 
     def test_hyperloglog_small_card_est(self):
-        reg = np.array([1 for i in range(1 << 4)], dtype=np.int8)
+        reg = np.array([1 for _ in range(1 << 4)], dtype=np.int8)
         with patch.object(HyperLogLog, '_linearcounting') as mock_method:
             mock_method.return_value = 0
             h = HyperLogLog(reg=reg)

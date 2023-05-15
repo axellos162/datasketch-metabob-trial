@@ -50,11 +50,11 @@ def bootstrap_sets(sets_file, sample_ratio, num_perms, skip=1,
     keys = list(range(len(sets)))
     # Generate paddings for asym.
     max_size = max(len(s) for s in sets)
-    paddings = dict()
+    paddings = {}
     if pad_for_asym:
-        padding_sizes = sorted(list(set([max_size-len(s) for s in sets])))
+        padding_sizes = sorted(list({max_size-len(s) for s in sets}))
         for num_perm in num_perms:
-            paddings[num_perm] = dict()
+            paddings[num_perm] = {}
             for i, padding_size in enumerate(padding_sizes):
                 if i == 0:
                     prev_size = 0
@@ -63,13 +63,13 @@ def bootstrap_sets(sets_file, sample_ratio, num_perms, skip=1,
                     prev_size = padding_sizes[i-1]
                     pad = paddings[num_perm][prev_size].copy()
                 for w in range(prev_size, padding_size):
-                    pad.update(str(w)+"_tmZZRe8DE23s")
+                    pad.update(f"{str(w)}_tmZZRe8DE23s")
                 paddings[num_perm][padding_size] = pad
     # Generate minhash
     print("Creating MinHash...")
-    minhashes = dict()
+    minhashes = {}
     for num_perm in num_perms:
-        print("Using num_parm = {}".format(num_perm))
+        print(f"Using num_parm = {num_perm}")
         ms = []
         for s in sets:
             m = MinHash(num_perm, hashfunc=_hash_32)
@@ -190,27 +190,27 @@ if __name__ == "__main__":
     args = parser.parse_args(sys.argv[1:])
 
     level = levels[args.level]
-    
+
     index_data, query_data = None, None
-    index_data_cache = "{}.pickle".format(args.indexed_sets)
-    query_data_cache = "{}.pickle".format(args.query_sets)
+    index_data_cache = f"{args.indexed_sets}.pickle"
+    query_data_cache = f"{args.query_sets}.pickle"
     if os.path.exists(index_data_cache):
-        print("Using cached indexed sets {}".format(index_data_cache))
+        print(f"Using cached indexed sets {index_data_cache}")
         with open(index_data_cache, "rb") as d:
             index_data = pickle.load(d)
     else:
-        print("Using indexed sets {}".format(args.indexed_sets))
+        print(f"Using indexed sets {args.indexed_sets}")
         index_data = bootstrap_sets(args.indexed_sets, 
                 args.indexed_sets_sample_ratio, num_perms=level["num_perms"],
                 pad_for_asym=args.use_asym_minhash)
         with open(index_data_cache, "wb") as d:
             pickle.dump(index_data, d)
     if os.path.exists(query_data_cache):
-        print("Using cached query sets {}".format(query_data_cache))
+        print(f"Using cached query sets {query_data_cache}")
         with open(query_data_cache, "rb") as d:
             query_data = pickle.load(d)
     else:
-        print("Using query sets {}".format(args.query_sets))
+        print(f"Using query sets {args.query_sets}")
         query_data = bootstrap_sets(args.query_sets, 1.0, 
                 num_perms=level["num_perms"], skip=0)
         with open(query_data_cache, "wb") as d:
@@ -224,18 +224,30 @@ if __name__ == "__main__":
                 similarity_threshold=0.1)
         for threshold in level["thresholds"]:
             index.similarity_threshold = threshold
-            print("Running ground truth benchmark threshold = {}".format(threshold))
+            print(f"Running ground truth benchmark threshold = {threshold}")
             ground_truth_results, ground_truth_times = \
                     benchmark_ground_truth(threshold, index, query_data)
-            for t, r, query_set, query_key in zip(ground_truth_times,
-                    ground_truth_results, query_data[1], query_data[2]):
-                rows.append((query_key, len(query_set), threshold, t,
-                    ",".join(str(k) for k in r)))
+            rows.extend(
+                (
+                    query_key,
+                    len(query_set),
+                    threshold,
+                    t,
+                    ",".join(str(k) for k in r),
+                )
+                for t, r, query_set, query_key in zip(
+                    ground_truth_times,
+                    ground_truth_results,
+                    query_data[1],
+                    query_data[2],
+                )
+            )
+
         df_groundtruth = pd.DataFrame.from_records(rows,
             columns=["query_key", "query_size", "threshold",
                 "query_time", "results"])
         df_groundtruth.to_csv(args.ground_truth_results)
-    
+
     storage_config = {"type": "dict"}
     if args.use_redis:
         storage_config = {
@@ -250,18 +262,33 @@ if __name__ == "__main__":
     for threshold in level["thresholds"]:
         for num_part in level["num_parts"]:
             for num_perm in level["num_perms"]:
-                print("Running LSH Ensemble benchmark "
-                        "threshold = {}, num_part = {}, num_perm = {}".format(
-                            threshold, num_part, num_perm))
+                print(
+                    f"Running LSH Ensemble benchmark threshold = {threshold}, num_part = {num_part}, num_perm = {num_perm}"
+                )
+
                 results, probe_times, process_times = benchmark_lshensemble(
                         threshold, num_perm, num_part, level["m"], storage_config, 
                         index_data, query_data)
-                for probe_time, process_time, result, query_set, query_key in zip(\
-                        probe_times, process_times, results, \
-                        query_data[1], query_data[2]):
-                    rows.append((query_key, len(query_set), threshold,
-                        num_part, num_perm, probe_time, process_time,
-                        ",".join(str(k) for k in result)))
+                rows.extend(
+                    (
+                        query_key,
+                        len(query_set),
+                        threshold,
+                        num_part,
+                        num_perm,
+                        probe_time,
+                        process_time,
+                        ",".join(str(k) for k in result),
+                    )
+                    for probe_time, process_time, result, query_set, query_key in zip(
+                        probe_times,
+                        process_times,
+                        results,
+                        query_data[1],
+                        query_data[2],
+                    )
+                )
+
     df = pd.DataFrame.from_records(rows,
         columns=["query_key", "query_size", "threshold", "num_part",
             "num_perm", "probe_time", "process_time", "results"])

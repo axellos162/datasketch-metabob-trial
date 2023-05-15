@@ -25,10 +25,7 @@ def _compute_nfp_uniform(l, u, cum_counts, sizes):
     """
     if l > u:
         raise ValueError("l must be less or equal to u")
-    if l == 0:
-        n = cum_counts[u]
-    else:
-        n = cum_counts[u]-cum_counts[l-1]
+    n = cum_counts[u] if l == 0 else cum_counts[u]-cum_counts[l-1]
     return n * float(sizes[u] - sizes[l]) / float(2*sizes[u])
 
 
@@ -122,8 +119,11 @@ def _compute_best_partitions(num_part, sizes, nfps):
     # If number of partitions is 2, then simply find the upper bound
     # of the first partition.
     if num_part == 2:
-        total_nfps, u = min((nfps[0, u1]+nfps[u1+1, len(sizes)-1], u1)
-            for u1 in range(0, len(sizes)-1))
+        total_nfps, u = min(
+            (nfps[0, u1] + nfps[u1 + 1, len(sizes) - 1], u1)
+            for u1 in range(len(sizes) - 1)
+        )
+
         return [(sizes[0], sizes[u]), (sizes[u+1], sizes[-1]),], \
                 total_nfps, None
 

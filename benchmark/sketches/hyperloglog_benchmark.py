@@ -25,12 +25,11 @@ def run_acc(size, seed, p):
     h = HyperLogLog(p=p)
     s = set()
     random.seed(seed)
-    for i in range(size):
+    for _ in range(size):
         v = int_bytes(random.randint(1, size))
         h.update(v)
         s.add(v)
-    perr = abs(float(len(s)) - h.count()) / float(len(s))
-    return perr
+    return abs(float(len(s)) - h.count()) / float(len(s))
 
 ps = range(4, 17)
 output = "hyperloglog_benchmark.png"
@@ -63,4 +62,4 @@ ax.set_title("HyperLogLog accuracy")
 ax.grid()
 
 fig.savefig(output)
-logging.info("Plot saved to %s" % output)
+logging.info(f"Plot saved to {output}")

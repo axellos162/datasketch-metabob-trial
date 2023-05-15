@@ -28,7 +28,7 @@ def _run_acc(size, seed, num_perm):
     m = MinHash(num_perm=num_perm)
     s = set()
     random.seed(seed)
-    for i in range(size):
+    for _ in range(size):
         v = int_bytes(random.randint(1, size))
         m.update(v)
         s.add(v)
@@ -40,8 +40,7 @@ def run_acc(size, num_perm):
     m2, s2 = _run_acc(size, 4, num_perm)
     j = float(len(s1.intersection(s2)))/float(len(s1.union(s2)))
     j_e = m1.jaccard(m2)
-    err = abs(j - j_e)
-    return err
+    return abs(j - j_e)
 
 num_perms = range(10, 256, 20)
 output = "minhash_benchmark.png"
@@ -71,4 +70,4 @@ ax.grid()
 
 plt.tight_layout()
 fig.savefig(output)
-logging.info("Plot saved to %s" % output)
+logging.info(f"Plot saved to {output}")

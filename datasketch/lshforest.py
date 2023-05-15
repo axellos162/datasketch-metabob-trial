@@ -33,7 +33,7 @@ class MinHashLSHForest(object):
         self.k = int(num_perm / l)
         self.hashtables = [dict() for _ in range(self.l)]
         self.hashranges = [(i*self.k, (i+1)*self.k) for i in range(self.l)]
-        self.keys = dict()
+        self.keys = {}
         # This is the sorted array implementation for the prefix trees
         self.sorted_hashtables = [[] for _ in range(self.l)]
 
@@ -64,8 +64,7 @@ class MinHashLSHForest(object):
         Index all the keys added so far and make them searchable.
         '''
         for i, hashtable in enumerate(self.hashtables):
-            self.sorted_hashtables[i] = [H for H in hashtable.keys()]
-            self.sorted_hashtables[i].sort()
+            self.sorted_hashtables[i] = sorted(hashtable.keys())
 
     def _query(self, minhash, r, b):
         if r > self.k or r <=0 or b > self.l or b <= 0:
@@ -80,8 +79,7 @@ class MinHashLSHForest(object):
             if i < len(ht) and ht[i][:prefix_size] == hp:
                 j = i
                 while j < len(ht) and ht[j][:prefix_size] == hp:
-                    for key in hashtable[ht[j]]:
-                        yield key
+                    yield from hashtable[ht[j]]
                     j += 1
 
     def query(self, minhash, k):

@@ -29,8 +29,7 @@ def _get_exact(A, B):
     (a_start, a_end) = A
     (b_start, b_end) = B
     overlap = min(a_end, b_end) - max(a_start, b_start)
-    if overlap < 0:
-        overlap = 0
+    overlap = max(overlap, 0)
     return float(overlap) / abs(a_start - a_end)
 
 def _minhash_inclusion(m1, m2):

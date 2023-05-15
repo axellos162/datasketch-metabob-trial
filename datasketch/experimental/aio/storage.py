@@ -123,17 +123,20 @@ if motor is not None and ReturnDocument is not None:
         """
 
         def __init__(self, config, name=None):
-            assert config['type'] == 'aiomongo', 'Storage type <{}> not supported'.format(config['type'])
+            assert (
+                config['type'] == 'aiomongo'
+            ), f"Storage type <{config['type']}> not supported"
+
             self._config = config
             self._mongo_param = self._parse_config(self._config['mongo'])
 
-            self._name = name if name else _random_name(11).decode('utf-8')
+            self._name = name or _random_name(11).decode('utf-8')
             if 'collection_name' in self.mongo_param:
                 self._collection_name = self.mongo_param['collection_name']
             elif 'collection_prefix' in self.mongo_param:
                 self._collection_name = self.mongo_param['collection_prefix'] + self._name
             else:
-                self._collection_name = 'lsh_' + self._name
+                self._collection_name = f'lsh_{self._name}'
 
             db_lsh = self.mongo_param['db'] if 'db' in self.mongo_param else 'db_0'
             if 'url' in self.mongo_param:
@@ -179,9 +182,8 @@ if motor is not None and ReturnDocument is not None:
         def _parse_config(config):
             cfg = {}
             for key, value in config.items():
-                if isinstance(value, dict):
-                    if 'env' in value:
-                        value = os.getenv(value['env'], value.get('default', None))
+                if isinstance(value, dict) and 'env' in value:
+                    value = os.getenv(value['env'], value.get('default', None))
                 cfg[key] = value
             return cfg
 
@@ -209,8 +211,7 @@ if motor is not None and ReturnDocument is not None:
                                                                                                     'key': False})]))
 
         async def insert(self, key, *vals, **kwargs):
-            buffer = kwargs.pop('buffer', False)
-            if buffer:
+            if buffer := kwargs.pop('buffer', False):
                 await self._insert(self._buffer, key, *vals)
             else:
                 await self._insert(self._collection, key, *vals)
@@ -219,8 +220,7 @@ if motor is not None and ReturnDocument is not None:
             await obj.insert_one(document={'key': key, 'vals': values})
 
         async def remove(self, *keys, **kwargs):
-            buffer = kwargs.pop('buffer', False)
-            if buffer:
+            if buffer := kwargs.pop('buffer', False):
                 fs = (self._buffer.delete_many_by_key(key=key) for key in keys)
                 await asyncio.gather(*fs)
             else:
@@ -237,7 +237,7 @@ if motor is not None and ReturnDocument is not None:
                     self._collection.aggregate([{'$group': {'_id': '$key', 'count': {'$sum': 1}}}])}
 
         async def has_key(self, key):
-            return True if await self._collection.find_one({'key': key}) else False
+            return bool(await self._collection.find_one({'key': key}))
 
         async def status(self):
             status = self._parse_config(self.config['mongo'])
@@ -262,8 +262,7 @@ if motor is not None and ReturnDocument is not None:
             pass
 
         async def remove_val(self, key, val, **kwargs):
-            buffer = kwargs.pop('buffer', False)
-            if buffer:
+            if buffer := kwargs.pop('buffer', False):
                 await self._buffer.delete_many_by_val(val=val)
             else:
                 await self._collection.find_one_and_delete({'key': key, 'vals': val})

@@ -180,8 +180,7 @@ class TestLeanMinHash(unittest.TestCase):
         m.update(444)
         lm3 = LeanMinHash(m)
         self.assertNotEqual(hash(lm1), hash(lm3))
-        d = dict()
-        d[lm1] = True
+        d = {lm1: True}
         self.assertTrue(d[lm2])
 
 

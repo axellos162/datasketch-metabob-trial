@@ -122,16 +122,23 @@ class MinHashLSHEnsemble(object):
         self.m = m
         rs = self._init_optimal_params(weights)
         # Initialize multiple LSH indexes for each partition
-        storage_config = {'type': 'dict'} if not storage_config else storage_config
+        storage_config = storage_config or {'type': 'dict'}
         basename = storage_config.get('basename', _random_name(11))
         self.indexes = [
-            dict((r, MinHashLSH(
-                num_perm=self.h,
-                params=(int(self.h/r), r),
-                storage_config=self._get_storage_config(
-                    basename, storage_config, partition, r),
-                prepickle=prepickle)) for r in rs)
-            for partition in range(0, num_part)]
+            {
+                r: MinHashLSH(
+                    num_perm=self.h,
+                    params=(int(self.h / r), r),
+                    storage_config=self._get_storage_config(
+                        basename, storage_config, partition, r
+                    ),
+                    prepickle=prepickle,
+                )
+                for r in rs
+            }
+            for partition in range(num_part)
+        ]
+
         self.lowers = [None for _ in self.indexes]
         self.uppers = [None for _ in self.indexes]
 
@@ -143,11 +150,7 @@ class MinHashLSHEnsemble(object):
                                                false_positive_weight,
                                                false_negative_weight)
                                 for xq in self.xqs], dtype=np.int)
-        # Find all unique r
-        rs = set()
-        for _, r in self.params:
-            rs.add(r)
-        return rs
+        return {r for _, r in self.params}
 
     def _get_optimal_param(self, x, q):
         i = np.searchsorted(self.xqs, float(x)/float(q), side='left')
@@ -219,8 +222,7 @@ class MinHashLSHEnsemble(object):
             if u is None:
                 continue
             b, r = self._get_optimal_param(u, size)
-            for key in index[r]._query_b(minhash, b):
-                yield key
+            yield from index[r]._query_b(minhash, b)
 
     def __contains__(self, key):
         '''

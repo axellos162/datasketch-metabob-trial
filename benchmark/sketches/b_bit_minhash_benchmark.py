@@ -25,9 +25,9 @@ def _run_minhash(A, B, data, seed, bs, num_perm):
 def _run_test(A, B, data, n, bs, num_perm):
     logging.info("Run tests with A = (%d, %d), B = (%d, %d), n = %d"
             % (A[0], A[1], B[0], B[1], n))
-    runs = np.array([_run_minhash(A, B, data, i, bs, num_perm)
-        for i in xrange(n)]).T
-    return runs
+    return np.array(
+        [_run_minhash(A, B, data, i, bs, num_perm) for i in xrange(n)]
+    ).T
 
 def run_full_tests(attr_pairs, data, n, bs, num_perm):
     return [_run_test(A, B, data, n, bs, num_perm)

@@ -1,10 +1,38 @@
 from datasketch import MinHashLSHEnsemble, MinHash
 
-set1 = set(["cat", "dog", "fish", "cow"])
-set2 = set(["cat", "dog", "fish", "cow", "pig", "elephant", "lion", "tiger",
-             "wolf", "bird", "human"])
-set3 = set(["cat", "dog", "car", "van", "train", "plane", "ship", "submarine",
-             "rocket", "bike", "scooter", "motorcyle", "SUV", "jet", "horse"])
+set1 = {"cat", "dog", "fish", "cow"}
+set2 = {
+    "cat",
+    "dog",
+    "fish",
+    "cow",
+    "pig",
+    "elephant",
+    "lion",
+    "tiger",
+    "wolf",
+    "bird",
+    "human",
+}
+
+set3 = {
+    "cat",
+    "dog",
+    "car",
+    "van",
+    "train",
+    "plane",
+    "ship",
+    "submarine",
+    "rocket",
+    "bike",
+    "scooter",
+    "motorcyle",
+    "SUV",
+    "jet",
+    "horse",
+}
+
 
 # Create MinHash objects
 m1 = MinHash()

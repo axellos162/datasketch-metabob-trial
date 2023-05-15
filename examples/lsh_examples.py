@@ -2,18 +2,57 @@
 Some examples for LSH
 '''
 
+
 from hashlib import sha1
 import numpy as np
 from datasketch.minhash import MinHash
 from datasketch.weighted_minhash import WeightedMinHashGenerator
 from datasketch.lsh import MinHashLSH
 
-set1 = set(['minhash', 'is', 'a', 'probabilistic', 'data', 'structure', 'for',
-            'estimating', 'the', 'similarity', 'between', 'datasets'])
-set2 = set(['minhash', 'is', 'a', 'probability', 'data', 'structure', 'for',
-            'estimating', 'the', 'similarity', 'between', 'documents'])
-set3 = set(['minhash', 'is', 'probability', 'data', 'structure', 'for',
-            'estimating', 'the', 'similarity', 'between', 'documents'])
+set1 = {
+    'minhash',
+    'is',
+    'a',
+    'probabilistic',
+    'data',
+    'structure',
+    'for',
+    'estimating',
+    'the',
+    'similarity',
+    'between',
+    'datasets',
+}
+
+set2 = {
+    'minhash',
+    'is',
+    'a',
+    'probability',
+    'data',
+    'structure',
+    'for',
+    'estimating',
+    'the',
+    'similarity',
+    'between',
+    'documents',
+}
+
+set3 = {
+    'minhash',
+    'is',
+    'probability',
+    'data',
+    'structure',
+    'for',
+    'estimating',
+    'the',
+    'similarity',
+    'between',
+    'documents',
+}
+
 
 v1 = np.random.uniform(1, 10, 10)
 v2 = np.random.uniform(1, 10, 10)

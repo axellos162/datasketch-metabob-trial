@@ -27,8 +27,7 @@ def _get_exact(A, B):
     (a_start, a_end) = A
     (b_start, b_end) = B
     overlap = min(a_end, b_end) - max(a_start, b_start)
-    if overlap < 0:
-        overlap = 0
+    overlap = max(overlap, 0)
     union = max(a_end, b_end) - min(a_start, b_start)
     return float(overlap) / union
 
@@ -116,7 +115,7 @@ if __name__ == "__main__":
     B = (1450, 5000)
     exps = [6, 8, 10]
     p_list = exps
-    num_perm_list = list([2**i for i in exps])
+    num_perm_list = [2**i for i in exps]
     b = 1
     n = 100
     save = "similarity_benchmark.png"

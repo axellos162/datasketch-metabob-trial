@@ -50,11 +50,11 @@ def read_sets_from_file(sets_file, sample_ratio, skip=1):
 def create_minhashes_from_sets(sets, num_perms, hashfunc, pad_for_asym=False):
     # Generate paddings for asym.
     max_size = max(len(s) for s in sets)
-    paddings = dict()
+    paddings = {}
     if pad_for_asym:
-        padding_sizes = sorted(list(set([max_size-len(s) for s in sets])))
+        padding_sizes = sorted(list({max_size-len(s) for s in sets}))
         for num_perm in num_perms:
-            paddings[num_perm] = dict()
+            paddings[num_perm] = {}
             for i, padding_size in enumerate(padding_sizes):
                 if i == 0:
                     prev_size = 0
@@ -63,12 +63,12 @@ def create_minhashes_from_sets(sets, num_perms, hashfunc, pad_for_asym=False):
                     prev_size = padding_sizes[i-1]
                     pad = paddings[num_perm][prev_size].copy()
                 for w in range(prev_size, padding_size):
-                    pad.update(str(w)+"_tmZZRe8DE23s")
+                    pad.update(f"{str(w)}_tmZZRe8DE23s")
                 paddings[num_perm][padding_size] = pad
     # Generate minhash
-    minhashes = dict()
+    minhashes = {}
     for num_perm in num_perms:
-        print("Using num_perm = {}".format(num_perm))
+        print(f"Using num_perm = {num_perm}")
         ms = []
         for s in sets:
             m = MinHash(num_perm, hashfunc=hashfunc)
@@ -189,7 +189,7 @@ def get_run(name, k, threshold, params, result_sqlite):
             if row[1] == k and row[2] == threshold 
             and json.loads(row[3]) == params]
     conn.close()
-    if len(runs) > 0:
+    if runs:
         return runs[0]
     return None
 
@@ -219,14 +219,14 @@ def evaluate_runs(result_sqlite, names=None):
             (run["name"] == 'lsh' and run["index"]["r"] > 1)]
 
     # Get ground truth results first.
-    for i, run in enumerate([run for run in runs 
-            if run["name"] == "ground_truth"]):
+    for run in [run for run in runs 
+            if run["name"] == "ground_truth"]:
         results, times = load_results(run["key"], conn)
         run.update({"results": results, "times": times})
-    
+
     # Compute mean recall and query time of every run.
-    for i, run in enumerate([run for run in runs 
-            if run["name"] != "ground_truth"]):
+    for run in [run for run in runs 
+            if run["name"] != "ground_truth"]:
         # Load results of this run.
         results, times = load_results(run["key"], conn)
         # Find the corresponding ground truth run with the same 
